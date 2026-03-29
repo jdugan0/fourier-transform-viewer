@@ -1,8 +1,88 @@
 using System;
+using System.Numerics;
 using Godot;
+using Vector2 = Godot.Vector2;
 
 namespace FTHelper
 {
+    public class ComplexChannel
+    {
+        private Complex[,] data;
+
+        public ComplexChannel(Complex[,] data)
+        {
+            this.data = data;
+        }
+
+        public ImageHelper ToArgPlot()
+        {
+            int w = data.GetLength(0);
+            int h = data.GetLength(1);
+
+            double maxLog = 0;
+            for (int i = 0; i < w; i++)
+            for (int j = 0; j < h; j++)
+            {
+                double logMag = Math.Log(1 + data[i, j].Magnitude);
+                if (logMag > maxLog)
+                    maxLog = logMag;
+            }
+
+            double[,] hue = new double[w, h];
+            double[,] sat = new double[w, h];
+            double[,] val = new double[w, h];
+
+            for (int i = 0; i < w; i++)
+            for (int j = 0; j < h; j++)
+            {
+                double arg = data[i, j].Phase;
+                hue[i, j] = (arg / Math.PI + 1.0) * 180.0; // [-π, π] -> [0, 360)
+                sat[i, j] = 1.0;
+                val[i, j] = maxLog > 0 ? Math.Log(1 + data[i, j].Magnitude) / maxLog : 0;
+            }
+
+            return ImageHelper.FromHSV(hue, sat, val);
+        }
+
+        public (ImageHelper, ImageHelper) ToDualPlot()
+        {
+            int w = data.GetLength(0);
+            int h = data.GetLength(1);
+
+            double maxMag = 0;
+            for (int i = 0; i < w; i++)
+            for (int j = 0; j < h; j++)
+            {
+                double mag = data[i, j].Magnitude;
+                if (mag > maxMag)
+                    maxMag = mag;
+            }
+
+            double[,] magR = new double[w, h],
+                magG = new double[w, h],
+                magB = new double[w, h];
+            double[,] argR = new double[w, h],
+                argG = new double[w, h],
+                argB = new double[w, h];
+
+            for (int i = 0; i < w; i++)
+            for (int j = 0; j < h; j++)
+            {
+                double mag = maxMag > 0 ? data[i, j].Magnitude / maxMag * 255.0 : 0;
+                magR[i, j] = mag;
+                magG[i, j] = mag;
+                magB[i, j] = mag;
+
+                double arg = (data[i, j].Phase / Math.PI + 1.0) * 0.5 * 255.0; // [-π, π] -> [0, 255]
+                argR[i, j] = arg;
+                argG[i, j] = arg;
+                argB[i, j] = arg;
+            }
+
+            return (new ImageHelper(magR, magG, magB), new ImageHelper(argR, argG, argB));
+        }
+    }
+
     public enum Channel
     {
         R,
@@ -194,7 +274,7 @@ namespace FTHelper
             }
         }
 
-        private ImageHelper(double[,] r, double[,] g, double[,] b)
+        public ImageHelper(double[,] r, double[,] g, double[,] b)
         {
             this.r = r;
             this.g = g;
