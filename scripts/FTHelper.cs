@@ -1,6 +1,7 @@
 using System;
 using System.Numerics;
 using Godot;
+using MathNet.Numerics.IntegralTransforms;
 using Vector2 = Godot.Vector2;
 
 namespace FTHelper
@@ -12,6 +13,73 @@ namespace FTHelper
         public ComplexChannel(Complex[,] data)
         {
             this.data = data;
+        }
+
+        private static double ChannelScale(Channel ch)
+        {
+            switch (ch)
+            {
+                case Channel.R:
+                case Channel.G:
+                case Channel.B:
+                    return 255.0;
+                case Channel.L:
+                    return 100.0;
+                case Channel.A:
+                case Channel.Lab_B:
+                    return 128.0;
+                case Channel.H:
+                    return 360.0;
+                case Channel.S:
+                case Channel.V:
+                    return 1.0;
+                default:
+                    return 1.0;
+            }
+        }
+
+        public static ComplexChannel FromChannel(ImageHelper image, Channel ch)
+        {
+            double[,] raw = image.GetChannel(ch);
+            int w = raw.GetLength(0),
+                h = raw.GetLength(1);
+            double scale = ChannelScale(ch);
+            Complex[,] data = new Complex[w, h];
+            for (int i = 0; i < w; i++)
+            for (int j = 0; j < h; j++)
+                data[i, j] = new Complex(raw[i, j] / scale, 0);
+            return new ComplexChannel(data);
+        }
+
+        public ComplexChannel FFT()
+        {
+            int w = data.GetLength(0),
+                h = data.GetLength(1);
+            Complex[,] result = (Complex[,])data.Clone();
+
+            // Transform rows
+            for (int j = 0; j < h; j++)
+            {
+                Complex[] row = new Complex[w];
+                for (int i = 0; i < w; i++)
+                    row[i] = result[i, j];
+                Fourier.Forward(row, FourierOptions.Default);
+                for (int i = 0; i < w; i++)
+                    result[i, j] = row[i];
+            }
+
+            // Transform columns
+            for (int i = 0; i < w; i++)
+            {
+                Complex[] col = new Complex[h];
+                for (int j = 0; j < h; j++)
+                    col[j] = result[i, j];
+                Fourier.Forward(col, FourierOptions.Default);
+                for (int j = 0; j < h; j++)
+                    result[i, j] = col[j];
+            }
+
+            return new ComplexChannel(result);
         }
 
         public ImageHelper ToArgPlot()
@@ -36,7 +104,7 @@ namespace FTHelper
             for (int j = 0; j < h; j++)
             {
                 double arg = data[i, j].Phase;
-                hue[i, j] = (arg / Math.PI + 1.0) * 180.0; // [-π, π] -> [0, 360)
+                hue[i, j] = (arg / Math.PI + 1.0) * 180.0;
                 sat[i, j] = 1.0;
                 val[i, j] = maxLog > 0 ? Math.Log(1 + data[i, j].Magnitude) / maxLog : 0;
             }
@@ -73,7 +141,7 @@ namespace FTHelper
                 magG[i, j] = mag;
                 magB[i, j] = mag;
 
-                double arg = (data[i, j].Phase / Math.PI + 1.0) * 0.5 * 255.0; // [-π, π] -> [0, 255]
+                double arg = (data[i, j].Phase / Math.PI + 1.0) * 0.5 * 255.0;
                 argR[i, j] = arg;
                 argG[i, j] = arg;
                 argB[i, j] = arg;
