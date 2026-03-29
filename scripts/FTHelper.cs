@@ -94,7 +94,20 @@ namespace FTHelper
 
         public ImageHelper(Image image)
         {
-            pixelArray = new Pixel[image.GetWidth(), image.GetHeight()];
+            int w = image.GetWidth();
+            int h = image.GetHeight();
+            pixelArray = new Pixel[w, h];
+            for (int i = 0; i < w; i++)
+            {
+                for (int j = 0; j < h; j++)
+                {
+                    Color c = image.GetPixel(i, j);
+                    int r = (int)Math.Round(c.R * 255);
+                    int g = (int)Math.Round(c.G * 255);
+                    int b = (int)Math.Round(c.B * 255);
+                    pixelArray[i, j] = new Pixel((r, g, b));
+                }
+            }
         }
 
         public ImageHelper(ImageHelper image)
