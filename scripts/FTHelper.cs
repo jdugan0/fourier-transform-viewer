@@ -11,6 +11,9 @@ namespace FTHelper
         L,
         A,
         Lab_B,
+        H,
+        S,
+        V,
     }
 
     public static class ColorConvert
@@ -71,6 +74,88 @@ namespace FTHelper
 
             return (R, G, Bl);
         }
+
+        public static (double H, double S, double V) RGBToHSV(double r, double g, double b)
+        {
+            double rf = r / 255.0;
+            double gf = g / 255.0;
+            double bf = b / 255.0;
+
+            double max = Math.Max(rf, Math.Max(gf, bf));
+            double min = Math.Min(rf, Math.Min(gf, bf));
+            double delta = max - min;
+
+            double H = 0;
+            if (delta > 0)
+            {
+                if (max == rf)
+                    H = 60.0 * (((gf - bf) / delta) % 6.0);
+                else if (max == gf)
+                    H = 60.0 * (((bf - rf) / delta) + 2.0);
+                else
+                    H = 60.0 * (((rf - gf) / delta) + 4.0);
+            }
+            if (H < 0)
+                H += 360.0;
+
+            double S = max == 0 ? 0 : delta / max;
+            double V = max;
+
+            return (H, S, V);
+        }
+
+        public static (double R, double G, double B) HSVToRGB(double H, double S, double V)
+        {
+            double C = V * S;
+            double X = C * (1.0 - Math.Abs((H / 60.0) % 2.0 - 1.0));
+            double m = V - C;
+
+            double rf,
+                gf,
+                bf;
+            if (H < 60)
+            {
+                rf = C;
+                gf = X;
+                bf = 0;
+            }
+            else if (H < 120)
+            {
+                rf = X;
+                gf = C;
+                bf = 0;
+            }
+            else if (H < 180)
+            {
+                rf = 0;
+                gf = C;
+                bf = X;
+            }
+            else if (H < 240)
+            {
+                rf = 0;
+                gf = X;
+                bf = C;
+            }
+            else if (H < 300)
+            {
+                rf = X;
+                gf = 0;
+                bf = C;
+            }
+            else
+            {
+                rf = C;
+                gf = 0;
+                bf = X;
+            }
+
+            double R = Math.Clamp(Math.Round((rf + m) * 255.0), 0, 255);
+            double G = Math.Clamp(Math.Round((gf + m) * 255.0), 0, 255);
+            double B = Math.Clamp(Math.Round((bf + m) * 255.0), 0, 255);
+
+            return (R, G, B);
+        }
     }
 
     public class ImageHelper
@@ -81,7 +166,11 @@ namespace FTHelper
         private double[,] labL,
             labA,
             labB;
+        private double[,] hsvH,
+            hsvS,
+            hsvV;
         private bool labCached = false;
+        private bool hsvCached = false;
 
         public int Width => r.GetLength(0);
         public int Height => r.GetLength(1);
@@ -134,6 +223,60 @@ namespace FTHelper
             labCached = true;
         }
 
+        private void EnsureHSV()
+        {
+            if (hsvCached)
+                return;
+            int w = Width,
+                h = Height;
+            hsvH = new double[w, h];
+            hsvS = new double[w, h];
+            hsvV = new double[w, h];
+            for (int i = 0; i < w; i++)
+            {
+                for (int j = 0; j < h; j++)
+                {
+                    var (H, S, V) = ColorConvert.RGBToHSV(r[i, j], g[i, j], b[i, j]);
+                    hsvH[i, j] = H;
+                    hsvS[i, j] = S;
+                    hsvV[i, j] = V;
+                }
+            }
+            hsvCached = true;
+        }
+
+        private void InvalidateCaches()
+        {
+            labCached = false;
+            hsvCached = false;
+        }
+
+        public void SetPixelRGB(int x, int y, double red, double green, double blue)
+        {
+            r[x, y] = red;
+            g[x, y] = green;
+            b[x, y] = blue;
+            InvalidateCaches();
+        }
+
+        public void SetPixelLAB(int x, int y, double L, double A, double B)
+        {
+            var (R, G, Bl) = ColorConvert.LABToRGB(L, A, B);
+            r[x, y] = R;
+            g[x, y] = G;
+            b[x, y] = Bl;
+            InvalidateCaches();
+        }
+
+        public void SetPixelHSV(int x, int y, double H, double S, double V)
+        {
+            var (R, G, Bl) = ColorConvert.HSVToRGB(H, S, V);
+            r[x, y] = R;
+            g[x, y] = G;
+            b[x, y] = Bl;
+            InvalidateCaches();
+        }
+
         public double[,] GetChannel(Channel ch)
         {
             switch (ch)
@@ -153,12 +296,21 @@ namespace FTHelper
                 case Channel.Lab_B:
                     EnsureLAB();
                     return labB;
+                case Channel.H:
+                    EnsureHSV();
+                    return hsvH;
+                case Channel.S:
+                    EnsureHSV();
+                    return hsvS;
+                case Channel.V:
+                    EnsureHSV();
+                    return hsvV;
                 default:
                     throw new ArgumentException("Unknown channel");
             }
         }
 
-        // Returns a new ImageHelper with one RGB channel replaced.
+        // Returns a new ImageHelper with one channel replaced.
         public ImageHelper WithChannel(Channel ch, double[,] data)
         {
             switch (ch)
@@ -177,6 +329,14 @@ namespace FTHelper
                     double[,] newA = ch == Channel.A ? data : labA;
                     double[,] newB = ch == Channel.Lab_B ? data : labB;
                     return FromLAB(newL, newA, newB);
+                case Channel.H:
+                case Channel.S:
+                case Channel.V:
+                    EnsureHSV();
+                    double[,] newH = ch == Channel.H ? data : hsvH;
+                    double[,] newS = ch == Channel.S ? data : hsvS;
+                    double[,] newV = ch == Channel.V ? data : hsvV;
+                    return FromHSV(newH, newS, newV);
                 default:
                     throw new ArgumentException("Unknown channel");
             }
@@ -204,6 +364,31 @@ namespace FTHelper
             result.labA = A;
             result.labB = B;
             result.labCached = true;
+            return result;
+        }
+
+        public static ImageHelper FromHSV(double[,] H, double[,] S, double[,] V)
+        {
+            int w = H.GetLength(0),
+                h = H.GetLength(1);
+            double[,] r = new double[w, h];
+            double[,] g = new double[w, h];
+            double[,] b = new double[w, h];
+            for (int i = 0; i < w; i++)
+            {
+                for (int j = 0; j < h; j++)
+                {
+                    var (R, G, Bl) = ColorConvert.HSVToRGB(H[i, j], S[i, j], V[i, j]);
+                    r[i, j] = R;
+                    g[i, j] = G;
+                    b[i, j] = Bl;
+                }
+            }
+            var result = new ImageHelper(r, g, b);
+            result.hsvH = H;
+            result.hsvS = S;
+            result.hsvV = V;
+            result.hsvCached = true;
             return result;
         }
 
