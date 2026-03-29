@@ -82,19 +82,25 @@ namespace FTHelper
             return new ComplexChannel(result);
         }
 
+        public ComplexChannel FFTShift()
+        {
+            int w = data.GetLength(0);
+            int h = data.GetLength(1);
+            Complex[,] result = new Complex[w, h];
+            int hw = w / 2,
+                hh = h / 2;
+            for (int i = 0; i < w; i++)
+            for (int j = 0; j < h; j++)
+                result[(i + hw) % w, (j + hh) % h] = data[i, j];
+            return new ComplexChannel(result);
+        }
+
         public ImageHelper ToArgPlot()
         {
             int w = data.GetLength(0);
             int h = data.GetLength(1);
 
-            double maxLog = 0;
-            for (int i = 0; i < w; i++)
-            for (int j = 0; j < h; j++)
-            {
-                double logMag = Math.Log(1 + data[i, j].Magnitude);
-                if (logMag > maxLog)
-                    maxLog = logMag;
-            }
+            double scale = 1;
 
             double[,] hue = new double[w, h];
             double[,] sat = new double[w, h];
@@ -106,9 +112,8 @@ namespace FTHelper
                 double arg = data[i, j].Phase;
                 hue[i, j] = (arg / Math.PI + 1.0) * 180.0;
                 sat[i, j] = 1.0;
-                val[i, j] = maxLog > 0 ? Math.Log(1 + data[i, j].Magnitude) / maxLog : 0;
+                val[i, j] = scale > 0 ? Math.Log(1 + data[i, j].Magnitude) / scale : 0;
             }
-
             return ImageHelper.FromHSV(hue, sat, val);
         }
 
