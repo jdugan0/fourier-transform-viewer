@@ -100,36 +100,27 @@ namespace FTHelper
             int w = data.GetLength(0);
             int h = data.GetLength(1);
 
-            double scale = 1;
-
-            double[,] hue = new double[w, h];
-            double[,] sat = new double[w, h];
-            double[,] val = new double[w, h];
+            double[,] rr = new double[w, h];
+            double[,] gg = new double[w, h];
+            double[,] bb = new double[w, h];
 
             for (int i = 0; i < w; i++)
             for (int j = 0; j < h; j++)
             {
-                double arg = data[i, j].Phase;
-                hue[i, j] = (arg / Math.PI + 1.0) * 180.0;
-                sat[i, j] = 1.0;
-                val[i, j] = scale > 0 ? Math.Log(1 + data[i, j].Magnitude) / scale : 0;
+                double hue = (data[i, j].Phase / Math.PI + 1.0) * 180.0;
+                double val = Math.Log(1 + data[i, j].Magnitude);
+                var (R, G, B) = ColorConvert.HSVToRGB(hue, 1.0, val);
+                rr[i, j] = R;
+                gg[i, j] = G;
+                bb[i, j] = B;
             }
-            return ImageHelper.FromHSV(hue, sat, val);
+            return new ImageHelper(rr, gg, bb);
         }
 
         public (ImageHelper, ImageHelper) ToDualPlot()
         {
             int w = data.GetLength(0);
             int h = data.GetLength(1);
-
-            double maxMag = 0;
-            for (int i = 0; i < w; i++)
-            for (int j = 0; j < h; j++)
-            {
-                double mag = data[i, j].Magnitude;
-                if (mag > maxMag)
-                    maxMag = mag;
-            }
 
             double[,] magR = new double[w, h],
                 magG = new double[w, h],
@@ -141,7 +132,7 @@ namespace FTHelper
             for (int i = 0; i < w; i++)
             for (int j = 0; j < h; j++)
             {
-                double mag = maxMag > 0 ? data[i, j].Magnitude / maxMag * 255.0 : 0;
+                double mag = data[i, j].Magnitude * 255.0;
                 magR[i, j] = mag;
                 magG[i, j] = mag;
                 magB[i, j] = mag;
