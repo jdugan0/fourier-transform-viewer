@@ -51,7 +51,7 @@ namespace FTHelper
             return new ComplexChannel(data);
         }
 
-        public ComplexChannel FFT()
+        public (ComplexChannel data, double maxValue) FFT()
         {
             int w = data.GetLength(0),
                 h = data.GetLength(1);
@@ -69,6 +69,7 @@ namespace FTHelper
             }
 
             // Transform columns
+            double maxMag = double.MinValue;
             for (int i = 0; i < w; i++)
             {
                 Complex[] col = new Complex[h];
@@ -76,10 +77,15 @@ namespace FTHelper
                     col[j] = result[i, j];
                 Fourier.Forward(col, FourierOptions.Default);
                 for (int j = 0; j < h; j++)
+                {
                     result[i, j] = col[j];
+                    double mag = col[j].Magnitude;
+                    if (mag > maxMag)
+                        maxMag = mag;
+                }
             }
 
-            return new ComplexChannel(result);
+            return (new ComplexChannel(result), maxMag);
         }
 
         public ComplexChannel FFTShift()

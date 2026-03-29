@@ -38,14 +38,9 @@ public partial class FTScene : Control
         helper = helper.Crop(size, size, center).Sample(512, 512);
 
         imageNormal.Texture = ImageTexture.CreateFromImage(helper.ToGodotImage());
-
+        var fft = ComplexChannel.FromChannel(helper, Channel.L).FFT();
         imageFT.Texture = ImageTexture.CreateFromImage(
-            ComplexChannel
-                .FromChannel(helper, Channel.L)
-                .FFT()
-                .FFTShift()
-                .ToArgPlot()
-                .ToGodotImage()
+            fft.data.FFTShift().ToArgPlot().ToGodotImage()
         );
     }
 }
