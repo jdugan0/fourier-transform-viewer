@@ -21,6 +21,11 @@ namespace FTHelper
             data[x, y] = Complex.FromPolarCoordinates(mag, phase);
         }
 
+        public Complex GetPixel(int x, int y)
+        {
+            return data[x, y];
+        }
+
         private static double ChannelScale(Channel ch)
         {
             switch (ch)

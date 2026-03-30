@@ -17,6 +17,35 @@ public partial class FFTLabel : TextureRect
     [Export]
     Slider radiusSlider;
 
+    [Export]
+    Slider magDrawSlider;
+
+    private const double MagSliderExponent = 3.0;
+    private const double MagSliderDeadzone = 0.02;
+    private double magMax = 10;
+
+    private double GetMagValue()
+    {
+        double t = magDrawSlider.Value;
+        if (t <= MagSliderDeadzone)
+            return 0;
+        double normalized = (t - MagSliderDeadzone) / (1.0 - MagSliderDeadzone);
+        return Math.Pow(normalized, MagSliderExponent) * magMax;
+    }
+
+    [Export]
+    Button lockMag;
+
+    [Export]
+    Button lockPhase;
+
+    public override void _Ready()
+    {
+        magDrawSlider.MinValue = 0;
+        magDrawSlider.MaxValue = 1;
+        magDrawSlider.Step = 0.001;
+    }
+
     public void Hover()
     {
         mouseOver = true;
@@ -39,6 +68,14 @@ public partial class FFTLabel : TextureRect
 
     public override void _Process(double delta)
     {
+        if (fTScene.FFT.c != null && fTScene.FFT.max > 10)
+        {
+            magMax = fTScene.FFT.max * 1.3;
+        }
+        else
+        {
+            magMax = 10;
+        }
         QueueRedraw();
         if (mouseOver)
         {
@@ -72,7 +109,19 @@ public partial class FFTLabel : TextureRect
                     {
                         continue;
                     }
-                    fTScene.FFT.c.SetPixel((int)localPos.X + x, (int)localPos.Y + y, 0, hue.Hue);
+                    int xC = (int)localPos.X + x;
+                    int yC = (int)localPos.Y + y;
+
+                    fTScene.FFT.c.SetPixel(
+                        xC,
+                        yC,
+                        lockMag.ButtonPressed
+                            ? fTScene.FFT.c.GetPixel(xC, yC).Magnitude
+                            : GetMagValue(),
+                        lockPhase.ButtonPressed
+                            ? fTScene.FFT.c.GetPixel(xC, yC).Phase
+                            : 2 * Math.PI * (hue.Hue) + Math.PI
+                    );
                 }
                 fTScene.imageFT.Texture = ImageTexture.CreateFromImage(
                     fTScene.FFT.c.ToArgPlot(fTScene.magScaleSlider.Value).ToGodotImage()

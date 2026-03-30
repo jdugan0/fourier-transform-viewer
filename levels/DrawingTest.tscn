@@ -53,7 +53,7 @@ grow_horizontal = 2
 theme_override_font_sizes/font_size = 76
 text = "BLANK"
 
-[node name="ImageFT" type="TextureRect" parent="." unique_id=1017347659 node_paths=PackedStringArray("text", "fTScene", "hue", "radiusSlider")]
+[node name="ImageFT" type="TextureRect" parent="." unique_id=1017347659 node_paths=PackedStringArray("text", "fTScene", "hue", "radiusSlider", "magDrawSlider", "lockMag", "lockPhase")]
 layout_mode = 1
 anchors_preset = 6
 anchor_left = 1.0
@@ -71,6 +71,9 @@ text = NodePath("Magnitude")
 fTScene = NodePath("..")
 hue = NodePath("../HueRing")
 radiusSlider = NodePath("../CircleRadius")
+magDrawSlider = NodePath("../MagDraw")
+lockMag = NodePath("../LOCKMAG")
+lockPhase = NodePath("../LOCKPHASE")
 
 [node name="Magnitude" type="Label" parent="ImageFT" unique_id=1052441357]
 layout_mode = 1
@@ -114,6 +117,19 @@ max_value = 20.0
 step = 0.1
 value = 1.5
 
+[node name="MagDraw" type="VSlider" parent="." unique_id=1869090554]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -260.0
+offset_top = 20.0
+offset_right = -216.0
+offset_bottom = 204.0
+grow_horizontal = 0
+max_value = 10.0
+step = 0.1
+
 [node name="HueRing" parent="." unique_id=1268299765 instance=ExtResource("3_016ty")]
 layout_mode = 1
 anchors_preset = 1
@@ -122,6 +138,33 @@ anchor_right = 1.0
 offset_left = -200.0
 offset_right = 0.0
 grow_horizontal = 0
+
+[node name="LOCKMAG" type="Button" parent="." unique_id=751441569]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -502.0
+offset_top = 104.0
+offset_right = -288.0
+offset_bottom = 170.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 42
+toggle_mode = true
+text = "MAGLOCK"
+
+[node name="LOCKPHASE" type="Button" parent="." unique_id=1472139772]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -521.0
+offset_right = -272.0
+offset_bottom = 66.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 42
+toggle_mode = true
+text = "PHASELOCK"
 
 [connection signal="pressed" from="ImageNormal/Button" to="." method="LoadImage"]
 [connection signal="pressed" from="ImageNormal/Button2" to="." method="LoadBlank"]
