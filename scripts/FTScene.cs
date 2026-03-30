@@ -47,6 +47,22 @@ public partial class FTScene : Control
         imageFT.Texture = ImageTexture.CreateFromImage(FFT.ToArgPlot().ToGodotImage());
     }
 
+    public void LoadBlank()
+    {
+        var image = Image.CreateEmpty(512, 512, false, Image.Format.Rgba8);
+        image.Fill(Colors.Black);
+
+        var helper = new ImageHelper(image);
+        ImageHelper greyScale = ImageHelper.FromLAB(
+            helper.GetChannel(Channel.L),
+            new double[512, 512],
+            new double[512, 512]
+        );
+        imageNormal.Texture = ImageTexture.CreateFromImage(greyScale.ToGodotImage());
+        FFT = ComplexChannel.FromChannel(helper, Channel.L).FFT().data.FFTShift();
+        imageFT.Texture = ImageTexture.CreateFromImage(FFT.ToArgPlot().ToGodotImage());
+    }
+
     public void Inverse()
     {
         imageNormal.Texture = ImageTexture.CreateFromImage(

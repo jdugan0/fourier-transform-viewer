@@ -11,6 +11,9 @@ public partial class FFTLabel : TextureRect
 
     private bool mouseOver;
 
+    [Export]
+    Slider radiusSlider;
+
     public void Hover()
     {
         mouseOver = true;
@@ -21,8 +24,19 @@ public partial class FFTLabel : TextureRect
         mouseOver = false;
     }
 
+    public override void _Draw()
+    {
+        if (mouseOver && Texture != null)
+        {
+            Vector2 localPos = GetLocalMousePosition();
+            int radius = (int)radiusSlider.Value;
+            DrawArc(localPos, radius, 0, Mathf.Tau, 64, Colors.White, 1.0f);
+        }
+    }
+
     public override void _Process(double delta)
     {
+        QueueRedraw();
         if (mouseOver)
         {
             Vector2 localPos = GetLocalMousePosition();
@@ -37,9 +51,14 @@ public partial class FFTLabel : TextureRect
             {
                 var tex = (ImageTexture)fTScene.imageFT.Texture;
                 var image = tex.GetImage();
+                int radius = (int)radiusSlider.Value;
                 // image.SetPixel((int)localPos.X, (int)localPos.Y, Colors.Black);
-                for (int x = -25; x < 25; x++)
-                for (int y = -25; y < 25; y++)
+                for (int x = -radius; x < radius; x++)
+                for (
+                    int y = -(int)Math.Sqrt(radius * radius - x * x);
+                    y < (int)Math.Sqrt(radius * radius - x * x);
+                    y++
+                )
                 {
                     if (
                         (int)localPos.X + x >= image.GetWidth()
@@ -50,7 +69,7 @@ public partial class FFTLabel : TextureRect
                     {
                         continue;
                     }
-                    fTScene.FFT.SetPixel((int)localPos.X + x, (int)localPos.Y + y);
+                    fTScene.FFT.SetPixel((int)localPos.X + x, (int)localPos.Y + y, 0, 0);
                 }
                 fTScene.imageFT.Texture = ImageTexture.CreateFromImage(
                     fTScene.FFT.ToArgPlot().ToGodotImage()

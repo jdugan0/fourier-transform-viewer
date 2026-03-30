@@ -16,9 +16,9 @@ namespace FTHelper
             this.data = data;
         }
 
-        public void SetPixel(int x, int y)
+        public void SetPixel(int x, int y, double mag, double phase)
         {
-            data[x, y] = data[x, y].Magnitude * Complex.One;
+            data[x, y] = Complex.FromPolarCoordinates(mag, phase);
         }
 
         private static double ChannelScale(Channel ch)
