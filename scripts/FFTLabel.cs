@@ -10,6 +10,7 @@ public partial class FFTLabel : TextureRect
     private FTScene fTScene;
 
     private bool mouseOver;
+    private Vector2? lastPaintPos;
 
     [Export]
     private HueRing hue;
@@ -66,6 +67,39 @@ public partial class FFTLabel : TextureRect
         }
     }
 
+    private void PaintAt(Vector2 center)
+    {
+        var tex = (ImageTexture)fTScene.imageFT.Texture;
+        var image = tex.GetImage();
+        int radius = (int)radiusSlider.Value;
+
+        for (int x = -radius; x < radius; x++)
+        for (
+            int y = -(int)Math.Sqrt(radius * radius - x * x);
+            y < (int)Math.Sqrt(radius * radius - x * x);
+            y++
+        )
+        {
+            int xC = (int)center.X + x;
+            int yC = (int)center.Y + y;
+
+            if (xC >= image.GetWidth() || xC < 0 || yC >= image.GetHeight() || yC < 0)
+                continue;
+
+            double mag = lockMag.ButtonPressed
+                ? fTScene.FFT.c.GetPixel(xC, yC).Magnitude
+                : GetMagValue();
+            double phase = lockPhase.ButtonPressed
+                ? fTScene.FFT.c.GetPixel(xC, yC).Phase
+                : 2 * Math.PI * (hue.Hue) + Math.PI;
+
+            fTScene.FFT.c.SetPixel(xC, yC, mag, phase);
+            int mirrorX = (image.GetWidth() - xC) % image.GetWidth();
+            int mirrorY = (image.GetHeight() - yC) % image.GetHeight();
+            fTScene.FFT.c.SetPixel(mirrorX, mirrorY, mag, -phase);
+        }
+    }
+
     public override void _Process(double delta)
     {
         if (fTScene.FFT.c != null && fTScene.FFT.max > 10)
@@ -89,44 +123,29 @@ public partial class FFTLabel : TextureRect
             }
             if (Input.IsActionPressed("CLICK"))
             {
-                var tex = (ImageTexture)fTScene.imageFT.Texture;
-                var image = tex.GetImage();
-                int radius = (int)radiusSlider.Value;
-                // image.SetPixel((int)localPos.X, (int)localPos.Y, Colors.Black);
-                for (int x = -radius; x < radius; x++)
-                for (
-                    int y = -(int)Math.Sqrt(radius * radius - x * x);
-                    y < (int)Math.Sqrt(radius * radius - x * x);
-                    y++
-                )
-                {
-                    if (
-                        (int)localPos.X + x >= image.GetWidth()
-                        || (int)localPos.X + x < 0
-                        || (int)localPos.Y + y >= image.GetHeight()
-                        || (int)localPos.Y + y < 0
-                    )
-                    {
-                        continue;
-                    }
-                    int xC = (int)localPos.X + x;
-                    int yC = (int)localPos.Y + y;
+                if (lastPaintPos == null)
+                    lastPaintPos = localPos;
 
-                    fTScene.FFT.c.SetPixel(
-                        xC,
-                        yC,
-                        lockMag.ButtonPressed
-                            ? fTScene.FFT.c.GetPixel(xC, yC).Magnitude
-                            : GetMagValue(),
-                        lockPhase.ButtonPressed
-                            ? fTScene.FFT.c.GetPixel(xC, yC).Phase
-                            : 2 * Math.PI * (hue.Hue) + Math.PI
-                    );
+                float dist = lastPaintPos.Value.DistanceTo(localPos);
+                int steps = Math.Max(1, (int)Math.Ceiling(dist));
+
+                for (int s = 0; s <= steps; s++)
+                {
+                    float t = steps == 0 ? 0 : (float)s / steps;
+                    Vector2 pos = lastPaintPos.Value.Lerp(localPos, t);
+                    PaintAt(pos);
                 }
+
+                lastPaintPos = localPos;
+
                 fTScene.imageFT.Texture = ImageTexture.CreateFromImage(
                     fTScene.FFT.c.ToArgPlot(fTScene.magScaleSlider.Value).ToGodotImage()
                 );
                 fTScene.Inverse();
+            }
+            else
+            {
+                lastPaintPos = null;
             }
         }
         else
