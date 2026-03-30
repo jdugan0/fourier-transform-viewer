@@ -1,0 +1,15 @@
+[gd_scene format=3 uid="uid://s5jetq4t18im"]
+
+[ext_resource type="Shader" uid="uid://davvxbh5gq161" path="res://scenes/HueRing.gdshader" id="1_lcody"]
+[ext_resource type="Script" uid="uid://bywf4ujwpptub" path="res://scripts/HueRing.cs" id="2_u4bdh"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_u4bdh"]
+shader = ExtResource("1_lcody")
+shader_parameter/inner_radius = 0.35
+shader_parameter/outer_radius = 0.5
+
+[node name="HueRing" type="ColorRect" unique_id=1268299765]
+material = SubResource("ShaderMaterial_u4bdh")
+offset_right = 200.0
+offset_bottom = 200.0
+script = ExtResource("2_u4bdh")

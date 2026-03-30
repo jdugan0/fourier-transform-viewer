@@ -45,15 +45,16 @@ public partial class FFTLabel : TextureRect
                         (int)localPos.X + x >= image.GetWidth()
                         || (int)localPos.X + x < 0
                         || (int)localPos.Y + y >= image.GetHeight()
-                        || (int)localPos.Y + x < 0
+                        || (int)localPos.Y + y < 0
                     )
                     {
                         continue;
                     }
-                    image.SetPixel((int)localPos.X + x, (int)localPos.Y + y, Colors.Black);
                     fTScene.FFT.SetPixel((int)localPos.X + x, (int)localPos.Y + y);
                 }
-                tex.Update(image);
+                fTScene.imageFT.Texture = ImageTexture.CreateFromImage(
+                    fTScene.FFT.ToArgPlot().ToGodotImage()
+                );
                 fTScene.Inverse();
             }
         }

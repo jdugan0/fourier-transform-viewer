@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://qvvs35f6tuy4" path="res://scripts/FTScene.cs" id="1_10hpm"]
 [ext_resource type="Script" uid="uid://c5k0i5egrotbr" path="res://scripts/FFTLabel.cs" id="2_nmexo"]
+[ext_resource type="PackedScene" uid="uid://s5jetq4t18im" path="res://scenes/HueRing.tscn" id="3_016ty"]
 
 [node name="Control" type="Control" unique_id=198472903 node_paths=PackedStringArray("imageNormal", "imageFT")]
 layout_mode = 3
@@ -67,6 +68,13 @@ offset_bottom = -25.0
 grow_horizontal = 2
 theme_override_font_sizes/font_size = 24
 horizontal_alignment = 1
+
+[node name="HueRing" parent="." unique_id=1268299765 instance=ExtResource("3_016ty")]
+layout_mode = 0
+offset_left = 1640.0
+offset_top = 34.0
+offset_right = 1840.0
+offset_bottom = 234.0
 
 [connection signal="pressed" from="ImageNormal/Button" to="." method="LoadImage"]
 [connection signal="mouse_entered" from="ImageFT" to="ImageFT" method="Hover"]

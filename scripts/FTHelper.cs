@@ -1,6 +1,7 @@
 using System;
 using System.Numerics;
 using Godot;
+using MathNet.Numerics;
 using MathNet.Numerics.IntegralTransforms;
 using Vector2 = Godot.Vector2;
 
@@ -17,7 +18,7 @@ namespace FTHelper
 
         public void SetPixel(int x, int y)
         {
-            data[x, y] = Complex.Zero;
+            data[x, y] = data[x, y].Magnitude * Complex.One;
         }
 
         private static double ChannelScale(Channel ch)
