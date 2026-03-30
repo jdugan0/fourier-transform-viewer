@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://dvljd4t6funmk"]
 
 [ext_resource type="Script" uid="uid://qvvs35f6tuy4" path="res://scripts/FTScene.cs" id="1_10hpm"]
+[ext_resource type="Script" uid="uid://c5k0i5egrotbr" path="res://scripts/FFTLabel.cs" id="2_nmexo"]
 
 [node name="Control" type="Control" unique_id=198472903 node_paths=PackedStringArray("imageNormal", "imageFT")]
 layout_mode = 3
@@ -37,7 +38,7 @@ grow_horizontal = 2
 theme_override_font_sizes/font_size = 76
 text = "LOAD"
 
-[node name="ImageFT" type="TextureRect" parent="." unique_id=1017347659]
+[node name="ImageFT" type="TextureRect" parent="." unique_id=1017347659 node_paths=PackedStringArray("text", "fTScene")]
 layout_mode = 1
 anchors_preset = 6
 anchor_left = 1.0
@@ -50,5 +51,23 @@ offset_right = -100.0
 offset_bottom = 256.0
 grow_horizontal = 0
 grow_vertical = 2
+script = ExtResource("2_nmexo")
+text = NodePath("Magnitude")
+fTScene = NodePath("..")
+
+[node name="Magnitude" type="Label" parent="ImageFT" unique_id=1052441357]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -20.0
+offset_top = -60.0
+offset_right = 20.0
+offset_bottom = -25.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 24
+horizontal_alignment = 1
 
 [connection signal="pressed" from="ImageNormal/Button" to="." method="LoadImage"]
+[connection signal="mouse_entered" from="ImageFT" to="ImageFT" method="Hover"]
+[connection signal="mouse_exited" from="ImageFT" to="ImageFT" method="UnHover"]

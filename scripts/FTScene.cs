@@ -11,6 +11,7 @@ public partial class FTScene : Control
     private TextureRect imageFT;
 
     private FileDialog fileDialog;
+    public ComplexChannel FFT = null;
 
     public override void _Ready()
     {
@@ -36,11 +37,13 @@ public partial class FTScene : Control
         int size = Math.Min(helper.Width, helper.Height);
         var center = new Godot.Vector2(helper.Width / 2f, helper.Height / 2f);
         helper = helper.Crop(size, size, center).Sample(512, 512);
-
-        imageNormal.Texture = ImageTexture.CreateFromImage(helper.ToGodotImage());
-        var fft = ComplexChannel.FromChannel(helper, Channel.L).FFT();
-        imageFT.Texture = ImageTexture.CreateFromImage(
-            fft.data.FFTShift().ToArgPlot().ToGodotImage()
+        ImageHelper greyScale = ImageHelper.FromLAB(
+            helper.GetChannel(Channel.L),
+            new double[512, 512],
+            new double[512, 512]
         );
+        imageNormal.Texture = ImageTexture.CreateFromImage(greyScale.ToGodotImage());
+        FFT = ComplexChannel.FromChannel(helper, Channel.L).FFT().data.FFTShift();
+        imageFT.Texture = ImageTexture.CreateFromImage(FFT.ToArgPlot().ToGodotImage());
     }
 }

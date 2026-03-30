@@ -8,7 +8,7 @@ namespace FTHelper
 {
     public class ComplexChannel
     {
-        private Complex[,] data;
+        public Complex[,] data;
 
         public ComplexChannel(Complex[,] data)
         {
