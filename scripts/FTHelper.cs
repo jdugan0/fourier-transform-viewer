@@ -144,7 +144,7 @@ namespace FTHelper
             return new ComplexChannel(result);
         }
 
-        public ImageHelper ToArgPlot()
+        public ImageHelper ToArgPlot(double magScale)
         {
             int w = data.GetLength(0);
             int h = data.GetLength(1);
@@ -157,7 +157,7 @@ namespace FTHelper
             for (int j = 0; j < h; j++)
             {
                 double hue = (data[i, j].Phase / Math.PI + 1.0) * 180.0;
-                double val = Math.Log(1 + data[i, j].Magnitude);
+                double val = Math.Log(1 + data[i, j].Magnitude) * magScale;
                 var (R, G, B) = ColorConvert.HSVToRGB(hue, 1.0, val);
                 rr[i, j] = R;
                 gg[i, j] = G;

@@ -12,6 +12,9 @@ public partial class FFTLabel : TextureRect
     private bool mouseOver;
 
     [Export]
+    private HueRing hue;
+
+    [Export]
     Slider radiusSlider;
 
     public void Hover()
@@ -40,11 +43,11 @@ public partial class FFTLabel : TextureRect
         if (mouseOver)
         {
             Vector2 localPos = GetLocalMousePosition();
-            if (fTScene.FFT != null)
+            if (fTScene.FFT.c != null)
             {
                 text.Text = String.Format(
                     "{0:F2}",
-                    fTScene.FFT.data[(int)localPos.X, (int)localPos.Y].Magnitude
+                    fTScene.FFT.c.data[(int)localPos.X, (int)localPos.Y].Magnitude
                 );
             }
             if (Input.IsActionPressed("CLICK"))
@@ -69,10 +72,10 @@ public partial class FFTLabel : TextureRect
                     {
                         continue;
                     }
-                    fTScene.FFT.SetPixel((int)localPos.X + x, (int)localPos.Y + y, 0, 0);
+                    fTScene.FFT.c.SetPixel((int)localPos.X + x, (int)localPos.Y + y, 0, hue.Hue);
                 }
                 fTScene.imageFT.Texture = ImageTexture.CreateFromImage(
-                    fTScene.FFT.ToArgPlot().ToGodotImage()
+                    fTScene.FFT.c.ToArgPlot(fTScene.magScaleSlider.Value).ToGodotImage()
                 );
                 fTScene.Inverse();
             }
