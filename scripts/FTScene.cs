@@ -8,7 +8,7 @@ public partial class FTScene : Control
     private TextureRect imageNormal;
 
     [Export]
-    private TextureRect imageFT;
+    public TextureRect imageFT;
 
     private FileDialog fileDialog;
     public ComplexChannel FFT = null;
@@ -45,5 +45,12 @@ public partial class FTScene : Control
         imageNormal.Texture = ImageTexture.CreateFromImage(greyScale.ToGodotImage());
         FFT = ComplexChannel.FromChannel(helper, Channel.L).FFT().data.FFTShift();
         imageFT.Texture = ImageTexture.CreateFromImage(FFT.ToArgPlot().ToGodotImage());
+    }
+
+    public void Inverse()
+    {
+        imageNormal.Texture = ImageTexture.CreateFromImage(
+            FFT.FFTShift().InverseFFT().ToDualPlot().Item1.ToGodotImage()
+        );
     }
 }

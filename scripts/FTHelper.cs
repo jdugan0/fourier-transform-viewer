@@ -15,6 +15,11 @@ namespace FTHelper
             this.data = data;
         }
 
+        public void SetPixel(int x, int y)
+        {
+            data[x, y] = Complex.Zero;
+        }
+
         private static double ChannelScale(Channel ch)
         {
             switch (ch)
@@ -98,6 +103,43 @@ namespace FTHelper
             for (int i = 0; i < w; i++)
             for (int j = 0; j < h; j++)
                 result[(i + hw) % w, (j + hh) % h] = data[i, j];
+            return new ComplexChannel(result);
+        }
+
+        public ComplexChannel InverseFFT()
+        {
+            int w = data.GetLength(0),
+                h = data.GetLength(1);
+            Complex[,] result = (Complex[,])data.Clone();
+
+            // Transform rows
+            for (int j = 0; j < h; j++)
+            {
+                Complex[] row = new Complex[w];
+                for (int i = 0; i < w; i++)
+                    row[i] = result[i, j];
+                Fourier.Inverse(row, FourierOptions.Default);
+                for (int i = 0; i < w; i++)
+                    result[i, j] = row[i];
+            }
+
+            // Transform columns
+            double maxMag = double.MinValue;
+            for (int i = 0; i < w; i++)
+            {
+                Complex[] col = new Complex[h];
+                for (int j = 0; j < h; j++)
+                    col[j] = result[i, j];
+                Fourier.Inverse(col, FourierOptions.Default);
+                for (int j = 0; j < h; j++)
+                {
+                    result[i, j] = col[j];
+                    double mag = col[j].Magnitude;
+                    if (mag > maxMag)
+                        maxMag = mag;
+                }
+            }
+
             return new ComplexChannel(result);
         }
 
