@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices.Marshalling;
 using Godot;
 
 public partial class FFTLabel : TextureRect
@@ -21,8 +22,8 @@ public partial class FFTLabel : TextureRect
     [Export]
     Slider magDrawSlider;
 
-    private const double MagSliderExponent = 3.0;
-    private const double MagSliderDeadzone = 0.02;
+    private const double MagSliderExponent = 6;
+    private const double MagSliderDeadzone = 0.001;
     private double magMax = 10;
 
     private double GetMagValue()
@@ -40,11 +41,21 @@ public partial class FFTLabel : TextureRect
     [Export]
     Button lockPhase;
 
+    [Export]
+    Label l;
+
     public override void _Ready()
     {
         magDrawSlider.MinValue = 0;
         magDrawSlider.MaxValue = 1;
         magDrawSlider.Step = 0.001;
+        magDrawSlider.ValueChanged += UpdateLabel;
+        UpdateLabel(magDrawSlider.Value);
+    }
+
+    public void UpdateLabel(double v)
+    {
+        l.Text = String.Format("{0:F2}", GetMagValue());
     }
 
     public void Hover()
