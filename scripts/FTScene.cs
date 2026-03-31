@@ -2,7 +2,7 @@ using System;
 using FTHelper;
 using Godot;
 
-public partial class FTScene : Control
+public partial class FTScene : Control, IFFTDisplay
 {
     [Export]
     private TextureRect imageNormal;
@@ -11,10 +11,12 @@ public partial class FTScene : Control
     public TextureRect imageFT;
 
     private FileDialog fileDialog;
-    public (ComplexChannel c, double max) FFT = (null, 0);
+    public FFTImage FFT { get; private set; }
 
     [Export]
     public Slider magScaleSlider;
+
+    public double MagScale => magScaleSlider.Value;
 
     public override void _Ready()
     {
@@ -24,24 +26,25 @@ public partial class FTScene : Control
         fileDialog.Filters = new[] { "*.png, *.jpg, *.jpeg, *.bmp, *.webp ; Images" };
         fileDialog.FileSelected += OnFileSelected;
         AddChild(fileDialog);
-        magScaleSlider.ValueChanged += MagChanged;
+        if (magScaleSlider != null)
+        {
+            magScaleSlider.ValueChanged += MagChanged;
+        }
     }
 
     public void MagChanged(double v)
     {
-        if (FFT.c != null)
+        if (FFT != null)
         {
-            imageFT.Texture = ImageTexture.CreateFromImage(
-                FFT.c.ToArgPlot(magScaleSlider.Value).ToGodotImage()
-            );
+            imageFT.Texture = ImageTexture.CreateFromImage(FFT.ToArgPlot(MagScale).ToGodotImage());
         }
     }
 
     public override void _Process(double delta)
     {
-        if (FFT.max != 0)
+        if (FFT != null && FFT.Max != 0 && magScaleSlider != null)
         {
-            magScaleSlider.MinValue = 1 / FFT.max;
+            magScaleSlider.MinValue = 1 / FFT.Max;
         }
     }
 
@@ -52,49 +55,23 @@ public partial class FTScene : Control
 
     private void OnFileSelected(string path)
     {
-        var image = new Image();
-        image.Load(path);
-
-        var helper = new ImageHelper(image);
-        int size = Math.Min(helper.Width, helper.Height);
-        var center = new Godot.Vector2(helper.Width / 2f, helper.Height / 2f);
-        helper = helper.Crop(size, size, center).Sample(512, 512);
-        ImageHelper greyScale = ImageHelper.FromLAB(
-            helper.GetChannel(Channel.L),
-            new double[512, 512],
-            new double[512, 512]
-        );
-        imageNormal.Texture = ImageTexture.CreateFromImage(greyScale.ToGodotImage());
-        var f = ComplexChannel.FromChannel(helper, Channel.L).FFT();
-        FFT = (f.data.FFTShift(), f.maxValue);
-        imageFT.Texture = ImageTexture.CreateFromImage(
-            FFT.c.ToArgPlot(magScaleSlider.Value).ToGodotImage()
-        );
+        var helper = ImageHelper.LoadAndPrepare(path);
+        imageNormal.Texture = ImageTexture.CreateFromImage(helper.ToGreyscale().ToGodotImage());
+        FFT = FFTImage.FromImage(helper, Channel.L);
+        imageFT.Texture = ImageTexture.CreateFromImage(FFT.ToArgPlot(MagScale).ToGodotImage());
     }
 
     public void LoadBlank()
     {
-        var image = Image.CreateEmpty(512, 512, false, Image.Format.Rgba8);
-        image.Fill(Colors.Black);
-
-        var helper = new ImageHelper(image);
-        ImageHelper greyScale = ImageHelper.FromLAB(
-            helper.GetChannel(Channel.L),
-            new double[512, 512],
-            new double[512, 512]
-        );
-        imageNormal.Texture = ImageTexture.CreateFromImage(greyScale.ToGodotImage());
-        var f = ComplexChannel.FromChannel(helper, Channel.L).FFT();
-        FFT = (f.data.FFTShift(), f.maxValue);
-        imageFT.Texture = ImageTexture.CreateFromImage(
-            FFT.c.ToArgPlot(magScaleSlider.Value).ToGodotImage()
-        );
+        var helper = ImageHelper.BlankGrey();
+        imageNormal.Texture = ImageTexture.CreateFromImage(helper.ToGreyscale().ToGodotImage());
+        FFT = FFTImage.FromImage(helper, Channel.L);
+        imageFT.Texture = ImageTexture.CreateFromImage(FFT.ToArgPlot(MagScale).ToGodotImage());
     }
 
-    public void Inverse()
+    public void OnFFTModified()
     {
-        imageNormal.Texture = ImageTexture.CreateFromImage(
-            FFT.c.FFTShift().InverseFFT().ToDualPlot().Item1.ToGodotImage()
-        );
+        imageFT.Texture = ImageTexture.CreateFromImage(FFT.ToArgPlot(MagScale).ToGodotImage());
+        imageNormal.Texture = ImageTexture.CreateFromImage(FFT.ToSpatial().ToGodotImage());
     }
 }

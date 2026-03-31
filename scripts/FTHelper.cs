@@ -201,6 +201,46 @@ namespace FTHelper
         }
     }
 
+    public class FFTImage
+    {
+        public ComplexChannel Complex { get; private set; }
+        public double Max { get; private set; }
+        public int Width => Complex.data.GetLength(0);
+        public int Height => Complex.data.GetLength(1);
+
+        public FFTImage(ComplexChannel c, double max)
+        {
+            Complex = c;
+            Max = max;
+        }
+
+        public static FFTImage FromImage(ImageHelper image, Channel ch)
+        {
+            var f = ComplexChannel.FromChannel(image, ch).FFT();
+            return new FFTImage(f.data.FFTShift(), f.maxValue);
+        }
+
+        public static FFTImage Blank(int size = 512)
+        {
+            var image = Image.CreateEmpty(size, size, false, Image.Format.Rgba8);
+            image.Fill(Colors.Black);
+            return FromImage(new ImageHelper(image), Channel.L);
+        }
+
+        public ImageHelper ToArgPlot(double magScale)
+            => Complex.ToArgPlot(magScale);
+
+        public ImageHelper ToSpatial()
+            => Complex.FFTShift().InverseFFT().ToDualPlot().Item1;
+    }
+
+    public interface IFFTDisplay
+    {
+        FFTImage FFT { get; }
+        double MagScale { get; }
+        void OnFFTModified();
+    }
+
     public enum Channel
     {
         R,
@@ -611,6 +651,32 @@ namespace FTHelper
                 }
             }
             return img;
+        }
+
+        public static ImageHelper LoadAndPrepare(string path, int size = 512)
+        {
+            var image = new Image();
+            image.Load(path);
+            var helper = new ImageHelper(image);
+            int s = Math.Min(helper.Width, helper.Height);
+            var center = new Vector2(helper.Width / 2f, helper.Height / 2f);
+            return helper.Crop(s, s, center).Sample(size, size);
+        }
+
+        public static ImageHelper BlankGrey(int size = 512)
+        {
+            var image = Image.CreateEmpty(size, size, false, Image.Format.Rgba8);
+            image.Fill(Colors.Black);
+            return new ImageHelper(image);
+        }
+
+        public ImageHelper ToGreyscale()
+        {
+            return FromLAB(
+                GetChannel(Channel.L),
+                new double[Width, Height],
+                new double[Width, Height]
+            );
         }
 
         public ImageHelper Crop(int w, int h, Vector2 center)
