@@ -227,11 +227,9 @@ namespace FTHelper
             return FromImage(new ImageHelper(image), Channel.L);
         }
 
-        public ImageHelper ToArgPlot(double magScale)
-            => Complex.ToArgPlot(magScale);
+        public ImageHelper ToArgPlot(double magScale) => Complex.ToArgPlot(magScale);
 
-        public ImageHelper ToSpatial()
-            => Complex.FFTShift().InverseFFT().ToDualPlot().Item1;
+        public ImageHelper ToSpatial() => Complex.FFTShift().InverseFFT().ToDualPlot().Item1;
     }
 
     public interface IFFTDisplay

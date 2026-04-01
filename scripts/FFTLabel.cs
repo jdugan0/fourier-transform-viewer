@@ -115,13 +115,13 @@ public partial class FFTLabel : TextureRect
     public override void _Process(double delta)
     {
         var fft = Display.FFT;
-        if (fft != null && fft.Max > 10)
+        if (fft != null && fft.Max > 500)
         {
             magMax = fft.Max * 1.3;
         }
         else
         {
-            magMax = 10;
+            magMax = 500;
         }
         QueueRedraw();
         if (mouseOver)
