@@ -21,6 +21,17 @@ namespace FTHelper
             data[x, y] = Complex.FromPolarCoordinates(mag, phase);
         }
 
+        public ComplexChannel Scale(double s)
+        {
+            int w = data.GetLength(0),
+                h = data.GetLength(1);
+            Complex[,] raw = new Complex[w, h];
+            for (int i = 0; i < w; i++)
+            for (int j = 0; j < h; j++)
+                raw[i, j] = data[i, j] / s;
+            return new ComplexChannel(raw);
+        }
+
         public Complex GetPixel(int x, int y)
         {
             return data[x, y];
@@ -218,6 +229,12 @@ namespace FTHelper
         {
             var f = ComplexChannel.FromChannel(image, ch).FFT();
             return new FFTImage(f.data.FFTShift(), f.maxValue);
+        }
+
+        public static FFTImage FromImageNoShift(ImageHelper image, Channel ch)
+        {
+            var f = ComplexChannel.FromChannel(image, ch).FFT();
+            return new FFTImage(f.data, f.maxValue);
         }
 
         public static FFTImage Blank(int size = 512)
