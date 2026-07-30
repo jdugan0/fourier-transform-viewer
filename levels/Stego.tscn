@@ -9,13 +9,13 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-scale = 0.333
 script = ExtResource("1_od35k")
 encodedImage = NodePath("ENCODED2")
 decodedImage = NodePath("DECODED")
 privateImage = NodePath("ORIGINALPRIVATE")
 publicImage = NodePath("ORIGINALPUBLIC")
-scale = 0.333
+startingCol = 60
+magScale = 0.05
 
 [node name="ENCODED2" type="TextureRect" parent="." unique_id=1901536775]
 layout_mode = 1

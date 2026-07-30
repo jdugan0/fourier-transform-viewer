@@ -28,7 +28,7 @@ public partial class StegoManager : Node
     int startingCol = 20;
 
     [Export]
-    double scale = 1;
+    double magScale = 0.333;
 
     public override void _Ready()
     {
@@ -72,24 +72,32 @@ public partial class StegoManager : Node
     public void Stego()
     {
         FFTImage encodedFFT = fftPublic;
+        int w = encodedFFT.Width;
+        int h = encodedFFT.Height;
+        int halfW = w / 2;
+        double[,] source = privateTexture.Sample(halfW, h).GetChannel(Channel.L);
+        int firstCol = Math.Max(startingCol, 1);
         double maxMagReal = -1;
         double maxMagOG = -1;
-        for (int x = startingCol; x < 512; x++)
+        for (int x = firstCol; x < halfW; x++)
         {
-            for (int y = 0; y < 512; y++)
+            int mx = w - x;
+            for (int y = 0; y < h; y++)
             {
+                int my = (h - y) % h;
                 double phase = encodedFFT.Complex.GetPixel(x, y).Phase;
                 double ogMag = encodedFFT.Complex.GetPixel(x, y).Magnitude;
                 if (ogMag > maxMagOG)
                 {
                     maxMagOG = ogMag;
                 }
-                double mag = privateTexture.GetChannel(Channel.L)[x, y] * scale;
+                double mag = source[x, y] * magScale / 100;
                 if (mag > maxMagReal)
                 {
                     maxMagReal = mag;
                 }
                 encodedFFT.Complex.SetPixel(x, y, mag, phase);
+                encodedFFT.Complex.SetPixel(mx, my, mag, -phase);
             }
         }
         GD.Print(maxMagOG);
@@ -97,12 +105,15 @@ public partial class StegoManager : Node
         ImageHelper e = encodedFFT.Complex.InverseFFT().ToDualPlot().Item1;
         encodedImage.Texture = ImageTexture.CreateFromImage(e.ToGodotImage());
 
+        ImageHelper decoded = FFTImage
+            .FromImageNoShift(e, Channel.L)
+            .Complex.Scale(magScale)
+            .ToDualPlot()
+            .Item1;
+        int decodedW = halfW - firstCol;
+        decodedImage.Size = new Vector2(512 - startingCol, 512);
         decodedImage.Texture = ImageTexture.CreateFromImage(
-            FFTImage
-                .FromImageNoShift(e, Channel.L)
-                .Complex.Scale(scale)
-                .ToDualPlot()
-                .Item1.ToGodotImage()
+            decoded.Crop(decodedW, h, new Vector2((firstCol + halfW) / 2f, h / 2f)).ToGodotImage()
         );
     }
 }
