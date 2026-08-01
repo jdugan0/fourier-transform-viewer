@@ -30,12 +30,37 @@ public partial class StegoManager : Node
     [Export]
     double magScale = 0.333;
 
+    [Export]
+    HSlider scaleSlider;
+
+    [Export]
+    HSlider colSlider;
+
     public override void _Ready()
     {
         filePrivate = new FileDialog();
         filePublic = new FileDialog();
         CreateFile(filePrivate, false);
         CreateFile(filePublic, true);
+        scaleSlider.MinValue = 0.001;
+        scaleSlider.MaxValue = 0.3;
+        scaleSlider.Step = 0.01;
+        scaleSlider.Value = magScale;
+        colSlider.Step = 1;
+        colSlider.MinValue = 0;
+        colSlider.MaxValue = 120;
+        colSlider.Value = startingCol;
+
+        colSlider.ValueChanged += (double v) =>
+        {
+            startingCol = (int)v;
+            Stego();
+        };
+        scaleSlider.ValueChanged += (double v) =>
+        {
+            magScale = v;
+            Stego();
+        };
     }
 
     public void CreateFile(FileDialog fileDialog, bool p)
@@ -71,7 +96,7 @@ public partial class StegoManager : Node
 
     public void Stego()
     {
-        FFTImage encodedFFT = fftPublic;
+        FFTImage encodedFFT = fftPublic.Clone();
         int w = encodedFFT.Width;
         int h = encodedFFT.Height;
         int halfW = w / 2;
@@ -111,7 +136,7 @@ public partial class StegoManager : Node
             .ToDualPlot()
             .Item1;
         int decodedW = halfW - firstCol;
-        decodedImage.Size = new Vector2(512 - startingCol, 512);
+        decodedImage.Size = new Vector2(512 - startingCol * 2, 512);
         decodedImage.Texture = ImageTexture.CreateFromImage(
             decoded.Crop(decodedW, h, new Vector2((firstCol + halfW) / 2f, h / 2f)).ToGodotImage()
         );

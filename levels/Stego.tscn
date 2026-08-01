@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dc44dxnjwr0d3" path="res://scripts/StegoManager.cs" id="1_od35k"]
 
-[node name="Stego" type="Control" unique_id=201859635 node_paths=PackedStringArray("encodedImage", "decodedImage", "privateImage", "publicImage")]
+[node name="Stego" type="Control" unique_id=201859635 node_paths=PackedStringArray("encodedImage", "decodedImage", "privateImage", "publicImage", "scaleSlider", "colSlider")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -16,6 +16,8 @@ privateImage = NodePath("ORIGINALPRIVATE")
 publicImage = NodePath("ORIGINALPUBLIC")
 startingCol = 60
 magScale = 0.05
+scaleSlider = NodePath("scale")
+colSlider = NodePath("startingCol")
 
 [node name="ENCODED2" type="TextureRect" parent="." unique_id=1901536775]
 layout_mode = 1
@@ -78,6 +80,38 @@ offset_top = -540.0
 offset_right = 1814.0
 offset_bottom = -28.0
 grow_vertical = 2
+
+[node name="startingCol" type="HSlider" parent="." unique_id=1723386531]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -242.5
+offset_top = -235.5
+offset_right = 242.5
+offset_bottom = -196.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="scale" type="HSlider" parent="." unique_id=2076932407]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -242.5
+offset_top = 196.5
+offset_right = 242.5
+offset_bottom = 235.5
+grow_horizontal = 2
+grow_vertical = 2
+min_value = 0.001
+max_value = 1.0
+step = 0.01
+value = 0.331
 
 [connection signal="pressed" from="Button" to="." method="Load" binds= [true]]
 [connection signal="pressed" from="Button2" to="." method="Load" binds= [false]]

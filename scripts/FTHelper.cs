@@ -21,6 +21,11 @@ namespace FTHelper
             data[x, y] = Complex.FromPolarCoordinates(mag, phase);
         }
 
+        public ComplexChannel Clone()
+        {
+            return new ComplexChannel((Complex[,])data.Clone());
+        }
+
         public ComplexChannel Scale(double s)
         {
             int w = data.GetLength(0),
@@ -243,6 +248,8 @@ namespace FTHelper
             image.Fill(Colors.Black);
             return FromImage(new ImageHelper(image), Channel.L);
         }
+
+        public FFTImage Clone() => new FFTImage(Complex.Clone(), Max);
 
         public ImageHelper ToArgPlot(double magScale) => Complex.ToArgPlot(magScale);
 
